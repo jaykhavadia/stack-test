@@ -19,12 +19,12 @@ function Home() {
           >
             Browse Jobs
           </Link>
-          <Link
-            to="/register"
+          {/* <Link
+            to="/dash"
             className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition"
           >
             Post a Job
-          </Link>
+          </Link> */}
         </div>
       </div>
 

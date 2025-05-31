@@ -1,13 +1,15 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { useStore } from '../store';
 import { useApi } from '../hooks/useApi';
+import { User } from '../types';
 
 function Register() {
   const navigate = useNavigate();
   const isDarkMode = useStore((state: { isDarkMode: boolean }) => state.isDarkMode);
   const { callApi } = useApi();
+  const currentUser = useStore((state: { currentUser: User | null }) => state.currentUser);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -16,6 +18,12 @@ function Register() {
     role: 'jobseeker',
     company: '',
   });
+
+  useEffect(() => {
+      if (currentUser) {
+        navigate(`/${currentUser.role}/dashboard`);
+      }
+    }, [currentUser, navigate]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

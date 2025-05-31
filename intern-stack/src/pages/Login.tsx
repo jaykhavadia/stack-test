@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useStore } from '../store';
@@ -9,11 +9,18 @@ function Login() {
   const navigate = useNavigate();
   const isDarkMode = useStore((state: { isDarkMode: boolean }) => state.isDarkMode);
   const setCurrentUser = useStore((state: { setCurrentUser: (user: User) => void }) => state.setCurrentUser);
+  const currentUser = useStore((state: { currentUser: User | null }) => state.currentUser);
   const { callApi, loading, error: apiError } = useApi();
   
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate(`/${currentUser.role}/dashboard`);
+    }
+  }, [currentUser, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -28,7 +35,6 @@ function Login() {
     if (error) {
       setError(error);
     } else if (data) {
-      console.log("🚀 ~ handleSubmit ~ data:", data)
       const user: User = {
         id: data._id,
         name: data.name,

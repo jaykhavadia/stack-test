@@ -12,8 +12,8 @@ import {
   Cell,
 } from "recharts";
 import { useStore } from "../store";
-import { dummyJobs, dummyApplications } from "../data";
 import { useApi } from "../hooks/useApi";
+import JobModal from "../components/JobModal";
 
 const monthlyData = [
   { month: "Jan", jobs: 4 },
@@ -40,37 +40,65 @@ function EmployerDashboard() {
 
   const [applications, setApplications] = useState([]);
   const [employerJobs, setEmployerJobs] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   const token = currentUser?.token || "";
   // const employerJobs = dummyJobs.filter(job => job.company === currentUser?.company);
   // const applications = dummyApplications.filter(app =>
   //   employerJobs.some(job => job.id === app.jobId)
   // );
 
-  useEffect(() => {
-    async function fetchData() {
-      // Fetch jobs
-      const jobsResponse = await callApi("/api/jobs", { token });
-      if (jobsResponse.data) {
-        // Filter jobs by currentUser company if needed, but backend filters by employer id
-        setEmployerJobs(jobsResponse.data);
-      }
-
-      // Fetch applications
-      const applicationsResponse = await callApi("/api/applications", {
-        token,
-      });
-      if (applicationsResponse.data) {
-        setApplications(applicationsResponse.data);
-      }
+  async function fetchData() {
+    // Fetch jobs
+    const jobsResponse = await callApi("/api/jobs", { token });
+    if (jobsResponse.data) {
+      // Filter jobs by currentUser company if needed, but backend filters by employer id
+      setEmployerJobs(jobsResponse.data);
     }
+
+    // Fetch applications
+    const applicationsResponse = await callApi("/api/applications", {
+      token,
+    });
+    if (applicationsResponse.data) {
+      setApplications(applicationsResponse.data);
+    }
+  }
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  const openCreateModal = () => {
+    setSelectedJob(null);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSuccess = () => {
+    // Refresh your data or show a toast message
+    fetchData();
+    console.log("Job created/updated successfully.");
+  };
 
   return (
     <div className={`${isDarkMode ? "text-white" : "text-gray-900"}`}>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Employer Dashboard</h1>
         <p className="text-gray-500">Welcome back, {currentUser?.name}</p>
+        {currentUser?.role === "employer" && (
+          <>
+            <button
+              onClick={openCreateModal}
+              className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Create Job
+            </button>
+          </>
+        )}
       </div>
 
       <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -191,10 +219,10 @@ function EmployerDashboard() {
             </thead>
             <tbody>
               {applications.slice(0, 5).map((app, index) => {
-                const job = employerJobs.find((j) => j.id === app.jobId);
+                const job = employerJobs.find((j) => j._id === app.job._id);
                 return (
                   <tr
-                    key={app.id}
+                    key={app._id}
                     className={`${
                       isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"
                     }`}
@@ -223,6 +251,13 @@ function EmployerDashboard() {
           </table>
         </div>
       </div>
+      <JobModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleSuccess}
+        jobToEdit={selectedJob}
+        token={token}
+      />
     </div>
   );
 }
